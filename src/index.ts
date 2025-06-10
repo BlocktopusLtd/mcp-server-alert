@@ -84,8 +84,12 @@ async function playAudioFile(filePath: string): Promise<void> {
 // Tool: Play a simple tone
 server.tool(
   "play_tone",
-  playToneSchema,
-  async ({ frequency, duration, waveform }) => {
+  {
+    description: "Play a simple tone with specified parameters",
+    inputSchema: playToneSchema
+  },
+  async (args) => {
+    const { frequency, duration, waveform } = args as z.infer<typeof playToneSchema>;
     try {
       // Generate tone data
       const sampleRate = 44100;
@@ -146,14 +150,18 @@ server.tool(
 // Tool: Play a melody
 server.tool(
   "play_melody",
-  playMelodySchema,
-  async ({ notes, tempo }) => {
+  {
+    description: "Play a sequence of musical notes",
+    inputSchema: playMelodySchema
+  },
+  async (args) => {
+    const { notes, tempo } = args as z.infer<typeof playMelodySchema>;
     try {
       // Calculate total duration
       const beatDuration = 60 / tempo; // Duration of one beat in seconds
       let totalDuration = 0;
       
-      const processedNotes = notes.map(note => {
+      const processedNotes = notes.map((note: { note: string; duration: string }) => {
         const duration = parseDuration(note.duration, beatDuration);
         totalDuration += duration;
         return { ...note, durationSeconds: duration };
@@ -205,8 +213,12 @@ server.tool(
 // Tool: Play a chord
 server.tool(
   "play_chord",
-  playChordSchema,
-  async ({ notes, duration }) => {
+  {
+    description: "Play multiple notes simultaneously",
+    inputSchema: playChordSchema
+  },
+  async (args) => {
+    const { notes, duration } = args as z.infer<typeof playChordSchema>;
     try {
       const beatDuration = 0.5; // Default beat duration
       const durationSeconds = parseDuration(duration, beatDuration);
@@ -252,8 +264,12 @@ server.tool(
 // Tool: Generate sound effects
 server.tool(
   "generate_sound_effect",
-  generateSoundEffectSchema,
-  async ({ type, variant }) => {
+  {
+    description: "Generate common sound effects",
+    inputSchema: generateSoundEffectSchema
+  },
+  async (args) => {
+    const { type, variant } = args as z.infer<typeof generateSoundEffectSchema>;
     try {
       const sampleRate = 44100;
       let buffer: Float32Array;
