@@ -1,4 +1,4 @@
-# Claude Project Preferences for WhoZat
+# Claude Project Preferences for mcp-server-alert
 
 ## File Editing Preferences
 - When editing files, show ONLY the diff of changes (git diff format)
@@ -44,19 +44,19 @@ Types: feat, fix, docs, style, refactor, test, chore
 - Test changes if test suite is available
 
 ## Project-Specific Context
-- This is a React Native app
-- Contact management features with NFC/QR code support
-- Uses VCard format for contact exchange
-- Has both Android and iOS targets
+- This is an MCP (Model Context Protocol) server
+- Provides alert/notification capabilities
+- TypeScript-based implementation
+- Integrates with Claude and other AI assistants
 
 ## Development Patterns
-- Prefer functional components with hooks
-- Follow existing code style (check .eslintrc.js and .prettierrc.js)
-- Maintain cross-platform compatibility
-- Consider offline-first functionality
+- Follow TypeScript best practices
+- Maintain MCP protocol compliance
+- Consider async/await patterns for server operations
+- Keep error handling robust
 
 ## Available MCP Servers
-- filesystem: For file operations in C:/dev/WhoZat
+- filesystem: For file operations in C:/dev/mcp-server-alert
 - git: For version control operations
 - github: For PR creation and GitHub integration (when configured)
 
