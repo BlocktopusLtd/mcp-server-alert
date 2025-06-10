@@ -1,0 +1,71 @@
+# Claude Project Preferences for mcp-server-alert
+
+## File Editing Preferences
+- When editing files, show ONLY the diff of changes (git diff format)
+- Never output full file contents or complete methods
+- Use the edit_file function which returns diffs automatically
+- For new files, show the complete content once, then only diffs for subsequent edits
+
+## Git Workflow
+- Branch naming: Use prefixes (feature/, bugfix/, refactor/) + descriptive-name
+- Create a feature branch at the start of each chat session
+- Commit after EVERY interaction/prompt response
+- Never commit directly to main/master
+
+## Commit Message Format
+```
+<type>: <summary of change>
+
+User request: <brief summary of what user asked>
+Changes made: <what Claude did>
+Files affected: <list of files>
+
+Context: <any relevant technical details>
+```
+
+Types: feat, fix, docs, style, refactor, test, chore
+
+## Auto-Commit Behavior
+- Commit immediately before passing control back to user
+- Include conversation context in every commit message
+- This creates an audit trail and rollback points
+- Each commit represents one interaction/change request
+
+## PR Process
+- When feature is complete, create PR to main
+- PR should squash all commits into one
+- Include summary of all changes and conversations
+- Add testing instructions
+
+## Safety Practices
+- Show diff preview before making changes
+- Confirm current branch before edits
+- Note commit hash for important checkpoints
+- Test changes if test suite is available
+
+## Project-Specific Context
+- This is an MCP (Model Context Protocol) server
+- Provides alert/notification capabilities
+- TypeScript-based implementation
+- Integrates with Claude and other AI assistants
+
+## Development Patterns
+- Follow TypeScript best practices
+- Maintain MCP protocol compliance
+- Consider async/await patterns for server operations
+- Keep error handling robust
+
+## Available MCP Servers
+- filesystem: For file operations in C:/dev/mcp-server-alert
+- git: For version control operations
+- github: For PR creation and GitHub integration (when configured)
+
+## GitHub Account Context
+- When referring to "blocktopus" for GitHub operations, this means the BlocktopusLtd account
+- Repository origin: https://github.com/BlocktopusLtd/
+
+## Communication Style
+- Be concise in responses
+- Focus on diffs and changes, not full code listings
+- Explain what changed and why
+- Always mention which files are affected
