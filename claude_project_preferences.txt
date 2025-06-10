@@ -60,6 +60,10 @@ Types: feat, fix, docs, style, refactor, test, chore
 - git: For version control operations
 - github: For PR creation and GitHub integration (when configured)
 
+## GitHub Account Context
+- When referring to "blocktopus" for GitHub operations, this means the BlocktopusLtd account
+- Repository origin: https://github.com/BlocktopusLtd/
+
 ## Communication Style
 - Be concise in responses
 - Focus on diffs and changes, not full code listings
