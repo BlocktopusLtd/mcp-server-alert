@@ -241,7 +241,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {
             sound: {
               type: "string",
-              enum: ["notification", "success", "error", "bell", "chime", "ping"],
+              enum: ["notification", "success", "error", "bell", "chime", "ping", "submarine"],
               description: "Name of the bundled sound to play"
             },
             volume: {
@@ -529,6 +529,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           case "ping":
             buffer = generatePingSound(sampleRate, volume);
             break;
+          case "submarine":
+            buffer = generateSubmarineSound(sampleRate, volume);
+            break;
           default:
             throw new Error(`Unknown bundled sound: ${sound}`);
         }
@@ -812,6 +815,43 @@ function generatePingSound(sampleRate: number, volume: number): Float32Array {
     const t = i / sampleRate;
     const envelope = Math.exp(-t * 20) * Math.sin(Math.PI * t / duration);
     buffer[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * volume;
+  }
+  
+  return buffer;
+}
+
+function generateSubmarineSound(sampleRate: number, volume: number): Float32Array {
+  // Submarine sonar ping with echo
+  const duration = 2.0;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const frequency = 1500; // Typical sonar frequency
+  
+  // Create multiple pings with decreasing volume (echo effect)
+  const pingDuration = 0.2;
+  const pings = [
+    { start: 0, amplitude: 1.0 },
+    { start: 0.4, amplitude: 0.5 },
+    { start: 0.7, amplitude: 0.25 },
+    { start: 0.9, amplitude: 0.125 }
+  ];
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    let sample = 0;
+    
+    pings.forEach(ping => {
+      if (t >= ping.start && t < ping.start + pingDuration) {
+        const localT = t - ping.start;
+        // Envelope for each ping
+        const envelope = Math.sin(Math.PI * localT / pingDuration) * Math.exp(-localT * 2);
+        // Add slight frequency modulation for more realistic sonar sound
+        const freqMod = 1 + Math.sin(2 * Math.PI * 5 * localT) * 0.02;
+        sample += Math.sin(2 * Math.PI * frequency * freqMod * t) * envelope * ping.amplitude;
+      }
+    });
+    
+    buffer[i] = sample * volume * 0.5;
   }
   
   return buffer;

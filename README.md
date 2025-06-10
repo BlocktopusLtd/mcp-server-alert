@@ -164,7 +164,7 @@ Play an external WAV file.
 Play a bundled notification sound.
 
 **Parameters:**
-- `sound` (string): Name of the bundled sound ("notification", "success", "error", "bell", "chime", "ping")
+- `sound` (string): Name of the bundled sound ("notification", "success", "error", "bell", "chime", "ping", "submarine")
 - `volume` (number): Volume level (0-1, default: 0.7)
 
 **Bundled Sounds:**
@@ -174,6 +174,7 @@ Play a bundled notification sound.
 - `bell`: Bell-like sound with harmonics
 - `chime`: Wind chime-like sound
 - `ping`: Short, high-pitched ping
+- `submarine`: Sonar ping with echo effect
 
 **Example:**
 ```
