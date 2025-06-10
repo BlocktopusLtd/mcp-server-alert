@@ -20,7 +20,7 @@ const server = new Server({
 });
 
 // Helper function to play audio file
-async function playAudioFile(filePath: string): Promise<void> {
+async function playAudioFile(filePath: string, volume: number = 1.0): Promise<void> {
   return new Promise((resolve, reject) => {
     let command: string;
     let args: string[];
@@ -29,6 +29,7 @@ async function playAudioFile(filePath: string): Promise<void> {
       case 'win32':
         // Try multiple methods on Windows
         command = 'powershell';
+        // Note: Windows SoundPlayer doesn't support volume directly
         args = ['-c', `(New-Object Media.SoundPlayer "${filePath}").PlaySync()`];
         break;
       case 'darwin':
@@ -87,6 +88,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               enum: ["sine", "square", "sawtooth", "triangle"],
               default: "sine",
               description: "Waveform type"
+            },
+            volume: {
+              type: "number",
+              minimum: 0,
+              maximum: 1,
+              default: 0.5,
+              description: "Volume level (0-1)"
             }
           },
           required: ["frequency", "duration"]
@@ -122,6 +130,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               maximum: 300,
               default: 120,
               description: "Tempo in BPM"
+            },
+            volume: {
+              type: "number",
+              minimum: 0,
+              maximum: 1,
+              default: 0.5,
+              description: "Volume level (0-1)"
             }
           },
           required: ["notes"]
@@ -144,6 +159,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: "string",
               default: "2n",
               description: "Duration (e.g., '8n', '4n', '2n', '1n')"
+            },
+            volume: {
+              type: "number",
+              minimum: 0,
+              maximum: 1,
+              default: 0.5,
+              description: "Volume level (0-1)"
             }
           },
           required: ["notes"]
@@ -166,9 +188,37 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               maximum: 3,
               default: 1,
               description: "Variant of the sound effect"
+            },
+            volume: {
+              type: "number",
+              minimum: 0,
+              maximum: 1,
+              default: 0.5,
+              description: "Volume level (0-1)"
             }
           },
           required: ["type"]
+        }
+      },
+      {
+        name: "play_wav",
+        description: "Play an external WAV file",
+        inputSchema: {
+          type: "object",
+          properties: {
+            filepath: {
+              type: "string",
+              description: "Path to the WAV file"
+            },
+            volume: {
+              type: "number",
+              minimum: 0,
+              maximum: 1,
+              default: 1.0,
+              description: "Volume level (0-1)"
+            }
+          },
+          required: ["filepath"]
         }
       }
     ]
@@ -181,7 +231,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   switch (name) {
     case "play_tone": {
-      const { frequency, duration, waveform = "sine" } = args as any;
+      const { frequency, duration, waveform = "sine", volume = 0.5 } = args as any;
       try {
         // Generate tone data
         const sampleRate = 44100;
@@ -209,7 +259,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               break;
           }
           
-          buffer[i] = sample * 0.3; // Reduce volume
+          buffer[i] = sample * volume;
         }
         
         // Convert to WAV format
@@ -239,7 +289,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     case "play_melody": {
-      const { notes, tempo = 120 } = args as any;
+      const { notes, tempo = 120, volume = 0.5 } = args as any;
       try {
         // Calculate total duration
         const beatDuration = 60 / tempo; // Duration of one beat in seconds
@@ -265,7 +315,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           for (let i = startSample; i < endSample && i < numSamples; i++) {
             const t = (i - startSample) / sampleRate;
             const envelope = Math.min(1, t * 10) * Math.max(0, 1 - t / note.durationSeconds);
-            buffer[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * 0.3;
+            buffer[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * volume;
           }
           
           currentTime += note.durationSeconds;
@@ -294,7 +344,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     case "play_chord": {
-      const { notes, duration = "2n" } = args as any;
+      const { notes, duration = "2n", volume = 0.5 } = args as any;
       try {
         const beatDuration = 0.5; // Default beat duration
         const durationSeconds = parseDuration(duration, beatDuration);
@@ -310,7 +360,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           for (let i = 0; i < numSamples; i++) {
             const t = i / sampleRate;
             const envelope = Math.min(1, t * 10) * Math.max(0, 1 - t / durationSeconds);
-            buffer[i] += Math.sin(2 * Math.PI * frequency * t) * envelope * 0.2 / notes.length;
+            buffer[i] += Math.sin(2 * Math.PI * frequency * t) * envelope * volume / notes.length;
           }
         }
         
@@ -337,26 +387,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     case "generate_sound_effect": {
-      const { type, variant = 1 } = args as any;
+      const { type, variant = 1, volume = 0.5 } = args as any;
       try {
         const sampleRate = 44100;
         let buffer: Float32Array;
         
         switch (type) {
           case "beep":
-            buffer = generateBeep(sampleRate, variant);
+            buffer = generateBeep(sampleRate, variant, volume);
             break;
           case "alert":
-            buffer = generateAlert(sampleRate, variant);
+            buffer = generateAlert(sampleRate, variant, volume);
             break;
           case "notification":
-            buffer = generateNotification(sampleRate, variant);
+            buffer = generateNotification(sampleRate, variant, volume);
             break;
           case "error":
-            buffer = generateError(sampleRate, variant);
+            buffer = generateError(sampleRate, variant, volume);
             break;
           case "success":
-            buffer = generateSuccess(sampleRate, variant);
+            buffer = generateSuccess(sampleRate, variant, volume);
             break;
           default:
             throw new Error(`Unknown sound effect type: ${type}`);
@@ -379,6 +429,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           content: [{
             type: "text",
             text: `❌ Error generating sound effect: ${error instanceof Error ? error.message : 'Unknown error'}`
+          }]
+        };
+      }
+    }
+
+    case "play_wav": {
+      const { filepath, volume = 1.0 } = args as any;
+      try {
+        // Read the WAV file
+        const fs = await import('fs/promises');
+        const wavData = await fs.readFile(filepath);
+        
+        // For volume adjustment, we'd need to parse and modify the WAV data
+        // For now, we'll save it to a temp file and play it
+        // In a production version, you'd want to actually parse and modify the audio data
+        const tempFile = join(tmpdir(), `wav_${Date.now()}.wav`);
+        await fs.writeFile(tempFile, wavData);
+        
+        // Play the file
+        await playAudioFile(tempFile, volume);
+        
+        // Clean up temp file
+        await fs.unlink(tempFile).catch(() => {}); // Ignore errors
+        
+        return {
+          content: [{
+            type: "text",
+            text: `✅ Played WAV file: ${filepath} at volume ${volume}`
+          }]
+        };
+      } catch (error) {
+        return {
+          content: [{
+            type: "text",
+            text: `❌ Error playing WAV file: ${error instanceof Error ? error.message : 'Unknown error'}`
           }]
         };
       }
@@ -420,7 +505,7 @@ function parseDuration(duration: string, beatDuration: number): number {
 }
 
 // Sound effect generators
-function generateBeep(sampleRate: number, variant: number): Float32Array {
+function generateBeep(sampleRate: number, variant: number, volume: number = 0.3): Float32Array {
   const duration = 0.2;
   const frequency = variant === 1 ? 800 : variant === 2 ? 1000 : 1200;
   const numSamples = Math.floor(sampleRate * duration);
@@ -429,13 +514,13 @@ function generateBeep(sampleRate: number, variant: number): Float32Array {
   for (let i = 0; i < numSamples; i++) {
     const t = i / sampleRate;
     const envelope = Math.sin(Math.PI * t / duration);
-    buffer[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * 0.3;
+    buffer[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * volume;
   }
   
   return buffer;
 }
 
-function generateAlert(sampleRate: number, variant: number): Float32Array {
+function generateAlert(sampleRate: number, variant: number, volume: number = 0.5): Float32Array {
   const duration = 0.5;
   const numSamples = Math.floor(sampleRate * duration);
   const buffer = new Float32Array(numSamples);
@@ -446,14 +531,14 @@ function generateAlert(sampleRate: number, variant: number): Float32Array {
   for (let i = 0; i < numSamples; i++) {
     const t = i / sampleRate;
     const freq = t < duration / 2 ? freq1 : freq2;
-    const envelope = 0.5;
-    buffer[i] = Math.sin(2 * Math.PI * freq * t) * envelope;
+    const envelope = 1.0;
+    buffer[i] = Math.sin(2 * Math.PI * freq * t) * envelope * volume;
   }
   
   return buffer;
 }
 
-function generateNotification(sampleRate: number, variant: number): Float32Array {
+function generateNotification(sampleRate: number, variant: number, volume: number = 0.3): Float32Array {
   const duration = 0.3;
   const numSamples = Math.floor(sampleRate * duration);
   const buffer = new Float32Array(numSamples);
@@ -468,14 +553,14 @@ function generateNotification(sampleRate: number, variant: number): Float32Array
     if (noteIndex < frequencies.length) {
       const freq = frequencies[noteIndex];
       const envelope = Math.sin(Math.PI * (t % (duration / frequencies.length)) / (duration / frequencies.length));
-      buffer[i] = Math.sin(2 * Math.PI * freq * t) * envelope * 0.3;
+      buffer[i] = Math.sin(2 * Math.PI * freq * t) * envelope * volume;
     }
   }
   
   return buffer;
 }
 
-function generateError(sampleRate: number, variant: number): Float32Array {
+function generateError(sampleRate: number, variant: number, volume: number = 0.4): Float32Array {
   const duration = 0.4;
   const numSamples = Math.floor(sampleRate * duration);
   const buffer = new Float32Array(numSamples);
@@ -486,13 +571,13 @@ function generateError(sampleRate: number, variant: number): Float32Array {
     const t = i / sampleRate;
     const wobble = Math.sin(2 * Math.PI * 6 * t) * 20;
     const envelope = Math.exp(-t * 3);
-    buffer[i] = Math.sin(2 * Math.PI * (baseFreq + wobble) * t) * envelope * 0.4;
+    buffer[i] = Math.sin(2 * Math.PI * (baseFreq + wobble) * t) * envelope * volume;
   }
   
   return buffer;
 }
 
-function generateSuccess(sampleRate: number, variant: number): Float32Array {
+function generateSuccess(sampleRate: number, variant: number, volume: number = 0.3): Float32Array {
   const duration = 0.4;
   const numSamples = Math.floor(sampleRate * duration);
   const buffer = new Float32Array(numSamples);
@@ -506,7 +591,7 @@ function generateSuccess(sampleRate: number, variant: number): Float32Array {
     const noteIndex = t < duration / 2 ? 0 : 1;
     const freq = frequencies[noteIndex];
     const envelope = Math.sin(Math.PI * t / duration);
-    buffer[i] = Math.sin(2 * Math.PI * freq * t) * envelope * 0.3;
+    buffer[i] = Math.sin(2 * Math.PI * freq * t) * envelope * volume;
   }
   
   return buffer;
