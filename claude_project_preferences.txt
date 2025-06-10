@@ -8,9 +8,11 @@
 
 ## Git Workflow
 - Branch naming: Use prefixes (feature/, bugfix/, refactor/) + descriptive-name
+- Always branch from main unless explicitly instructed otherwise
 - Create a feature branch at the start of each chat session
 - Commit after EVERY interaction/prompt response
 - Never commit directly to main/master
+- Always ensure main is up-to-date before creating new branches (git pull)
 
 ## Commit Message Format
 ```
@@ -33,15 +35,20 @@ Types: feat, fix, docs, style, refactor, test, chore
 
 ## PR Process
 - When feature is complete, create PR to main
-- PR should squash all commits into one
+- Always use squash merge method
+- Enable auto-delete branch after merge
 - Include summary of all changes and conversations
 - Add testing instructions
+- Update PR description before merging if changes were made
+- PR title should be concise but descriptive
 
 ## Safety Practices
 - Show diff preview before making changes
 - Confirm current branch before edits
 - Note commit hash for important checkpoints
 - Test changes if test suite is available
+- Always pull latest main before creating new branches
+- Check PR status/conflicts before merging
 
 ## Project-Specific Context
 - This is an MCP (Model Context Protocol) server
@@ -69,3 +76,19 @@ Types: feat, fix, docs, style, refactor, test, chore
 - Focus on diffs and changes, not full code listings
 - Explain what changed and why
 - Always mention which files are affected
+- Provide status updates during workflow (e.g., "Branch created", "PR #X opened")
+- Summarize completed workflow steps at the end
+
+## Workflow Optimizations
+- If making multiple related changes in one session, group them logically in commits
+- Use git stash if switching contexts mid-work
+- Clean up local branches after PR merge (git branch -d)
+- Use descriptive branch names that indicate the work being done
+- Consider using conventional branch prefixes:
+  - feature/ for new features
+  - bugfix/ or fix/ for bug fixes
+  - refactor/ for code refactoring
+  - docs/ for documentation updates
+  - chore/ for maintenance tasks
+- Add PR labels if available (enhancement, bug, documentation, etc.)
+- Link related issues in PR description when applicable
