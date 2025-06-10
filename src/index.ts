@@ -241,8 +241,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {
             sound: {
               type: "string",
-              enum: ["notification", "success", "error", "bell", "chime", "ping", "submarine"],
-              description: "Name of the bundled sound to play"
+              description: "Name of the bundled sound to play (e.g., notification, success, error, bell, chime, ping, submarine, bottle, glass, funk, morse, purr, tink, or any other sound name)"
             },
             volume: {
               type: "number",
@@ -510,30 +509,38 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         
         // Generate the appropriate sound based on selection
         const sampleRate = 44100;
-        switch (sound) {
-          case "notification":
-            buffer = generateNotificationSound(sampleRate, volume);
-            break;
-          case "success":
-            buffer = generateSuccessSound(sampleRate, volume);
-            break;
-          case "error":
-            buffer = generateErrorSound(sampleRate, volume);
-            break;
-          case "bell":
-            buffer = generateBellSound(sampleRate, volume);
-            break;
-          case "chime":
-            buffer = generateChimeSound(sampleRate, volume);
-            break;
-          case "ping":
-            buffer = generatePingSound(sampleRate, volume);
-            break;
-          case "submarine":
-            buffer = generateSubmarineSound(sampleRate, volume);
-            break;
-          default:
-            throw new Error(`Unknown bundled sound: ${sound}`);
+        
+        // Check if we have a specific generator for this sound
+        const soundGenerators: Record<string, (sr: number, vol: number) => Float32Array> = {
+          notification: generateNotificationSound,
+          success: generateSuccessSound,
+          error: generateErrorSound,
+          bell: generateBellSound,
+          chime: generateChimeSound,
+          ping: generatePingSound,
+          submarine: generateSubmarineSound,
+          // Additional sounds from alert-sound-notify and similar packages
+          bottle: generateBottleSound,
+          glass: generateGlassSound,
+          funk: generateFunkSound,
+          morse: generateMorseSound,
+          purr: generatePurrSound,
+          tink: generateTinkSound,
+          // macOS native sounds from node-notifier
+          basso: generateBassoSound,
+          blow: generateBlowSound,
+          frog: generateFrogSound,
+          hero: generateHeroSound,
+          pop: generatePopSound,
+          sosumi: generateSosumiSound
+        };
+        
+        // Use specific generator if available, otherwise use generic generator
+        if (soundGenerators[sound.toLowerCase()]) {
+          buffer = soundGenerators[sound.toLowerCase()](sampleRate, volume);
+        } else {
+          // Generic sound generator for unknown sounds
+          buffer = generateGenericSound(sound, sampleRate, volume);
         }
         
         // Convert to WAV and play
@@ -852,6 +859,261 @@ function generateSubmarineSound(sampleRate: number, volume: number): Float32Arra
     });
     
     buffer[i] = sample * volume * 0.5;
+  }
+  
+  return buffer;
+}
+
+// Additional sound generators for alert-sound-notify sounds
+function generateBottleSound(sampleRate: number, volume: number): Float32Array {
+  // Bottle blow sound - like blowing across a bottle opening
+  const duration = 0.5;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const baseFreq = 220; // Low bottle resonance
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const envelope = Math.sin(Math.PI * t / duration) * Math.exp(-t * 2);
+    // Add some breathiness with noise
+    const noise = (Math.random() - 0.5) * 0.1;
+    const tone = Math.sin(2 * Math.PI * baseFreq * t) * 0.9;
+    buffer[i] = (tone + noise) * envelope * volume;
+  }
+  
+  return buffer;
+}
+
+function generateGlassSound(sampleRate: number, volume: number): Float32Array {
+  // Glass tap sound - high pitched with quick decay
+  const duration = 0.3;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const frequency = 2500; // High glass frequency
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const envelope = Math.exp(-t * 15); // Quick decay
+    buffer[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * volume;
+  }
+  
+  return buffer;
+}
+
+function generateFunkSound(sampleRate: number, volume: number): Float32Array {
+  // Funky bass-like sound
+  const duration = 0.4;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const envelope = t < 0.1 ? t * 10 : Math.exp(-(t - 0.1) * 5);
+    const freq = 110 * (1 + Math.sin(2 * Math.PI * 8 * t) * 0.5); // Wobbling bass
+    buffer[i] = Math.sin(2 * Math.PI * freq * t) * envelope * volume;
+  }
+  
+  return buffer;
+}
+
+function generateMorseSound(sampleRate: number, volume: number): Float32Array {
+  // Morse code-like beeps
+  const duration = 0.6;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const frequency = 800;
+  
+  // Pattern: dot dot dash (... -)
+  const pattern = [
+    { start: 0, duration: 0.05 },    // dot
+    { start: 0.1, duration: 0.05 },  // dot
+    { start: 0.2, duration: 0.15 },  // dash
+  ];
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    let inBeep = false;
+    
+    for (const beep of pattern) {
+      if (t >= beep.start && t < beep.start + beep.duration) {
+        inBeep = true;
+        break;
+      }
+    }
+    
+    buffer[i] = inBeep ? Math.sin(2 * Math.PI * frequency * t) * volume : 0;
+  }
+  
+  return buffer;
+}
+
+function generatePurrSound(sampleRate: number, volume: number): Float32Array {
+  // Cat purr-like sound with low frequency modulation
+  const duration = 0.8;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const baseFreq = 25; // Very low frequency for purr
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const envelope = Math.sin(Math.PI * t / duration);
+    // Combine low frequency with harmonics for purr texture
+    let sample = 0;
+    for (let harmonic = 1; harmonic <= 5; harmonic++) {
+      sample += Math.sin(2 * Math.PI * baseFreq * harmonic * t) / harmonic;
+    }
+    buffer[i] = sample * envelope * volume * 0.3;
+  }
+  
+  return buffer;
+}
+
+function generateTinkSound(sampleRate: number, volume: number): Float32Array {
+  // Light metallic tink sound
+  const duration = 0.2;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const frequencies = [1800, 2400, 3200]; // Multiple frequencies for metallic sound
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const envelope = Math.exp(-t * 10);
+    let sample = 0;
+    
+    frequencies.forEach((freq, index) => {
+      sample += Math.sin(2 * Math.PI * freq * t) / (index + 1);
+    });
+    
+    buffer[i] = sample * envelope * volume * 0.5;
+  }
+  
+  return buffer;
+}
+
+// macOS native sound generators
+function generateBassoSound(sampleRate: number, volume: number): Float32Array {
+  // Deep bass thud
+  const duration = 0.3;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const frequency = 60;
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const envelope = Math.exp(-t * 8);
+    buffer[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * volume;
+  }
+  
+  return buffer;
+}
+
+function generateBlowSound(sampleRate: number, volume: number): Float32Array {
+  // Blow/whistle sound
+  const duration = 0.4;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const envelope = Math.sin(Math.PI * t / duration);
+    const freq = 1000 + Math.sin(2 * Math.PI * 3 * t) * 200; // Slight vibrato
+    const noise = (Math.random() - 0.5) * 0.05;
+    buffer[i] = (Math.sin(2 * Math.PI * freq * t) + noise) * envelope * volume;
+  }
+  
+  return buffer;
+}
+
+function generateFrogSound(sampleRate: number, volume: number): Float32Array {
+  // Frog croak
+  const duration = 0.3;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const envelope = t < 0.1 ? t * 10 : Math.exp(-(t - 0.1) * 5);
+    const freq = 200 + Math.sin(2 * Math.PI * 15 * t) * 50;
+    buffer[i] = Math.sin(2 * Math.PI * freq * t) * envelope * volume;
+  }
+  
+  return buffer;
+}
+
+function generateHeroSound(sampleRate: number, volume: number): Float32Array {
+  // Heroic fanfare-like sound
+  const duration = 0.6;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const noteIndex = Math.floor(t * notes.length / duration);
+    
+    if (noteIndex < notes.length) {
+      const localT = t % (duration / notes.length);
+      const envelope = Math.sin(Math.PI * localT / (duration / notes.length));
+      buffer[i] = Math.sin(2 * Math.PI * notes[noteIndex] * t) * envelope * volume;
+    }
+  }
+  
+  return buffer;
+}
+
+function generatePopSound(sampleRate: number, volume: number): Float32Array {
+  // Pop/bubble sound
+  const duration = 0.1;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const frequency = 400;
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const envelope = Math.sin(Math.PI * t / duration) * Math.exp(-t * 20);
+    buffer[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * volume;
+  }
+  
+  return buffer;
+}
+
+function generateSosumiSound(sampleRate: number, volume: number): Float32Array {
+  // Classic Mac Sosumi sound - ascending then descending
+  const duration = 0.4;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const freq = t < 0.2 ? 400 + t * 2000 : 800 - (t - 0.2) * 2000;
+    const envelope = Math.sin(Math.PI * t / duration);
+    buffer[i] = Math.sin(2 * Math.PI * freq * t) * envelope * volume;
+  }
+  
+  return buffer;
+}
+
+// Generic sound generator for unknown sounds
+function generateGenericSound(soundName: string, sampleRate: number, volume: number): Float32Array {
+  // Generate a unique sound based on the sound name
+  // Use the name to seed consistent but varied sounds
+  let hash = 0;
+  for (let i = 0; i < soundName.length; i++) {
+    hash = ((hash << 5) - hash) + soundName.charCodeAt(i);
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  
+  const duration = 0.3 + (Math.abs(hash % 5) * 0.1); // 0.3 to 0.8 seconds
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const baseFreq = 200 + (Math.abs(hash % 800)); // 200-1000 Hz
+  const modFreq = 1 + (Math.abs(hash % 10)); // 1-11 Hz modulation
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const envelope = Math.sin(Math.PI * t / duration) * Math.exp(-t * 2);
+    const freqMod = 1 + Math.sin(2 * Math.PI * modFreq * t) * 0.1;
+    buffer[i] = Math.sin(2 * Math.PI * baseFreq * freqMod * t) * envelope * volume;
   }
   
   return buffer;

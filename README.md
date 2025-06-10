@@ -164,10 +164,12 @@ Play an external WAV file.
 Play a bundled notification sound.
 
 **Parameters:**
-- `sound` (string): Name of the bundled sound ("notification", "success", "error", "bell", "chime", "ping", "submarine")
+- `sound` (string): Name of the bundled sound (see list below or use any custom name)
 - `volume` (number): Volume level (0-1, default: 0.7)
 
-**Bundled Sounds:**
+**Pre-defined Bundled Sounds:**
+
+*Original sounds:*
 - `notification`: Classic two-tone notification
 - `success`: Ascending major chord arpeggio
 - `error`: Low frequency buzz with descending pitch
@@ -175,6 +177,25 @@ Play a bundled notification sound.
 - `chime`: Wind chime-like sound
 - `ping`: Short, high-pitched ping
 - `submarine`: Sonar ping with echo effect
+
+*alert-sound-notify compatible sounds:*
+- `bottle`: Bottle blow resonance
+- `glass`: High-pitched glass tap
+- `funk`: Funky bass wobble
+- `morse`: Morse code pattern (dot-dot-dash)
+- `purr`: Cat-like purring sound
+- `tink`: Light metallic tink
+
+*macOS native notification sounds:*
+- `basso`: Deep bass thud
+- `blow`: Whistle/blow sound
+- `frog`: Frog croak
+- `hero`: Heroic fanfare
+- `pop`: Pop/bubble sound
+- `sosumi`: Classic Mac alert sound
+
+**Custom Sounds:**
+You can also pass any custom sound name, and the system will generate a unique sound based on that name. For example: `play_bundled_sound({ sound: "my-custom-alert" })` will generate a consistent sound unique to that name.
 
 **Example:**
 ```
