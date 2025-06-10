@@ -139,11 +139,10 @@ async function playAudioFile(filePath: string, volume: number = 1.0): Promise<vo
       case 'win32':
         // Windows: Apply volume by modifying WAV data if needed
         if (volume !== 1.0) {
-          const fs = require('fs');
-          const wavData = fs.readFileSync(filePath);
+          const wavData = readFileSync(filePath);
           const adjustedWav = adjustWavVolume(wavData, volume);
           const tempFile = join(tmpdir(), `vol_adjusted_${Date.now()}.wav`);
-          fs.writeFileSync(tempFile, adjustedWav);
+          writeFileSync(tempFile, adjustedWav);
           filePath = tempFile; // Use the volume-adjusted file
         }
         command = 'powershell';
@@ -157,11 +156,10 @@ async function playAudioFile(filePath: string, volume: number = 1.0): Promise<vo
         command = 'aplay';
         // aplay doesn't have a simple volume flag, so we adjust the WAV data
         if (volume !== 1.0) {
-          const fs = require('fs');
-          const wavData = fs.readFileSync(filePath);
+          const wavData = readFileSync(filePath);
           const adjustedWav = adjustWavVolume(wavData, volume);
           const tempFile = join(tmpdir(), `vol_adjusted_${Date.now()}.wav`);
-          fs.writeFileSync(tempFile, adjustedWav);
+          writeFileSync(tempFile, adjustedWav);
           filePath = tempFile;
         }
         args = [filePath];
