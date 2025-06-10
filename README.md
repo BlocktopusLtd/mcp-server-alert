@@ -1,27 +1,34 @@
-# MCP Server Alert
+# @blocktopus/mcp-server-alert
 
-An MCP (Model Context Protocol) server that enables AI assistants to generate alerts, sounds, tones, melodies, and sound effects.
+[![npm version](https://badge.fury.io/js/@blocktopus%2Fmcp-server-alert.svg)](https://badge.fury.io/js/@blocktopus%2Fmcp-server-alert)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Features
+An MCP (Model Context Protocol) server that enables AI assistants to generate alerts, sounds, tones, melodies, and sound effects. Perfect for creating audio notifications, alerts, and musical sequences directly from your AI assistant!
+
+## 🎵 Features
 
 - **Play Tones**: Generate pure tones with customizable frequency, duration, and waveform
 - **Play Melodies**: Create sequences of musical notes with tempo control
 - **Play Chords**: Play multiple notes simultaneously
 - **Sound Effects**: Generate common sound effects (beep, alert, notification, error, success)
+- **Cross-Platform**: Works on Windows, macOS, and Linux
+- **Easy Integration**: Simple MCP server that works with Claude Desktop and other MCP clients
 
-## Installation
+## 📦 Installation
+
+### Global Installation (Recommended)
 
 ```bash
-npm install @blocktopus/mcp-server-alert
+npm install -g @blocktopus/mcp-server-alert
 ```
 
-Or use directly with npx:
+### Or use directly with npx:
 
 ```bash
 npx @blocktopus/mcp-server-alert
 ```
 
-## Configuration
+## ⚙️ Configuration
 
 ### Claude Desktop
 
@@ -30,6 +37,31 @@ Add the following to your Claude Desktop configuration file:
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
+#### Windows Configuration (using full path to npx.cmd):
+```json
+{
+  "mcpServers": {
+    "sound": {
+      "command": "C:\\Program Files\\nodejs\\npx.cmd",
+      "args": ["-y", "@blocktopus/mcp-server-alert"]
+    }
+  }
+}
+```
+
+#### Windows Configuration (using npx in PATH):
+```json
+{
+  "mcpServers": {
+    "sound": {
+      "command": "npx",
+      "args": ["-y", "@blocktopus/mcp-server-alert"]
+    }
+  }
+}
+```
+
+#### macOS/Linux Configuration:
 ```json
 {
   "mcpServers": {
@@ -56,7 +88,7 @@ Add to `.cursor/mcp.json` in your project:
 }
 ```
 
-## Available Tools
+## 🛠️ Available Tools
 
 ### 1. `play_tone`
 Play a simple tone with specified parameters.
@@ -109,14 +141,14 @@ Generate common sound effects.
 "Play a success sound effect"
 ```
 
-## Platform Support
+## 💻 Platform Support
 
 The server supports audio playback on:
 - **Windows**: Uses PowerShell's Media.SoundPlayer
 - **macOS**: Uses afplay
-- **Linux**: Uses aplay
+- **Linux**: Uses aplay (requires ALSA)
 
-## Development
+## 🚀 Development
 
 ### Setup
 ```bash
@@ -144,15 +176,15 @@ mcp-server-alert/
 └── README.md         # This file
 ```
 
-## License
+## 📝 License
 
-MIT
+MIT © Blocktopus
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## TODO
+## 🔮 Future Features
 
 - [ ] Add support for more audio formats
 - [ ] Implement MIDI support
@@ -160,3 +192,15 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - [ ] Support for audio file playback
 - [ ] Add reverb and other effects
 - [ ] Implement real-time synthesis with Tone.js
+- [ ] WebSocket support for remote control
+- [ ] Volume control
+
+## 🐛 Issues & Troubleshooting
+
+If you encounter any problems, please check our [Troubleshooting Guide](TROUBLESHOOTING.md) first.
+
+For unresolved issues, please [file an issue](https://github.com/blocktopus/mcp-server-alert/issues) along with a detailed description.
+
+## 🌟 Support
+
+If you find this project useful, please consider giving it a star on GitHub!
