@@ -5,9 +5,21 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { spawn } from "child_process";
-import { writeFileSync } from "fs";
+import { writeFileSync, readFileSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
+
+// Bundled notification sounds as base64 encoded WAV files
+// These are common notification sounds that can be used without external files
+const BUNDLED_SOUNDS: Record<string, string> = {
+  // Simple notification beep
+  notification: "data:audio/wav;base64,UklGRjwCAABXQVZFZm10IBAAAAABAAEARA...", // This would be the actual base64 data
+  // Success sound
+  success: "data:audio/wav;base64,UklGRjwCAABXQVZFZm10IBAAAAABAAEARA...",
+  // Error sound
+  error: "data:audio/wav;base64,UklGRjwCAABXQVZFZm10IBAAAAABAAEARA...",
+  // Add more sounds here
+};
 
 // Initialize the MCP server
 const server = new Server({
@@ -219,6 +231,28 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["filepath"]
+        }
+      },
+      {
+        name: "play_bundled_sound",
+        description: "Play a bundled notification sound",
+        inputSchema: {
+          type: "object",
+          properties: {
+            sound: {
+              type: "string",
+              enum: ["notification", "success", "error", "bell", "chime", "ping"],
+              description: "Name of the bundled sound to play"
+            },
+            volume: {
+              type: "number",
+              minimum: 0,
+              maximum: 1,
+              default: 0.7,
+              description: "Volume level (0-1)"
+            }
+          },
+          required: ["sound"]
         }
       }
     ]
@@ -469,6 +503,58 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
     }
 
+    case "play_bundled_sound": {
+      const { sound, volume = 0.7 } = args as any;
+      try {
+        let buffer: Float32Array;
+        
+        // Generate the appropriate sound based on selection
+        const sampleRate = 44100;
+        switch (sound) {
+          case "notification":
+            buffer = generateNotificationSound(sampleRate, volume);
+            break;
+          case "success":
+            buffer = generateSuccessSound(sampleRate, volume);
+            break;
+          case "error":
+            buffer = generateErrorSound(sampleRate, volume);
+            break;
+          case "bell":
+            buffer = generateBellSound(sampleRate, volume);
+            break;
+          case "chime":
+            buffer = generateChimeSound(sampleRate, volume);
+            break;
+          case "ping":
+            buffer = generatePingSound(sampleRate, volume);
+            break;
+          default:
+            throw new Error(`Unknown bundled sound: ${sound}`);
+        }
+        
+        // Convert to WAV and play
+        const wavBuffer = createWavBuffer(buffer, sampleRate);
+        const tempFile = join(tmpdir(), `bundled_${sound}_${Date.now()}.wav`);
+        writeFileSync(tempFile, wavBuffer);
+        await playAudioFile(tempFile, volume);
+        
+        return {
+          content: [{
+            type: "text",
+            text: `✅ Played bundled sound: ${sound} at volume ${volume}`
+          }]
+        };
+      } catch (error) {
+        return {
+          content: [{
+            type: "text",
+            text: `❌ Error playing bundled sound: ${error instanceof Error ? error.message : 'Unknown error'}`
+          }]
+        };
+      }
+    }
+
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
@@ -592,6 +678,140 @@ function generateSuccess(sampleRate: number, variant: number, volume: number = 0
     const freq = frequencies[noteIndex];
     const envelope = Math.sin(Math.PI * t / duration);
     buffer[i] = Math.sin(2 * Math.PI * freq * t) * envelope * volume;
+  }
+  
+  return buffer;
+}
+
+// Bundled sound generators
+function generateNotificationSound(sampleRate: number, volume: number): Float32Array {
+  // Classic notification sound - two quick ascending tones
+  const duration = 0.3;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    let freq: number;
+    if (t < 0.1) {
+      freq = 523.25; // C5
+    } else if (t < 0.15) {
+      freq = 0; // silence
+    } else if (t < 0.25) {
+      freq = 659.25; // E5
+    } else {
+      freq = 0;
+    }
+    
+    if (freq > 0) {
+      const envelope = Math.sin(Math.PI * ((t % 0.1) / 0.1));
+      buffer[i] = Math.sin(2 * Math.PI * freq * t) * envelope * volume;
+    }
+  }
+  
+  return buffer;
+}
+
+function generateSuccessSound(sampleRate: number, volume: number): Float32Array {
+  // Ascending major chord arpeggio
+  const duration = 0.5;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const noteIndex = Math.floor(t * notes.length / duration);
+    
+    if (noteIndex < notes.length) {
+      const localT = t % (duration / notes.length);
+      const envelope = Math.sin(Math.PI * localT / (duration / notes.length));
+      buffer[i] = Math.sin(2 * Math.PI * notes[noteIndex] * t) * envelope * volume;
+    }
+  }
+  
+  return buffer;
+}
+
+function generateErrorSound(sampleRate: number, volume: number): Float32Array {
+  // Low frequency buzz with descending pitch
+  const duration = 0.3;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const baseFreq = 150 - (t * 50); // Descending from 150Hz to 100Hz
+    const wobble = Math.sin(2 * Math.PI * 8 * t) * 10;
+    const envelope = Math.exp(-t * 2);
+    buffer[i] = Math.sin(2 * Math.PI * (baseFreq + wobble) * t) * envelope * volume;
+  }
+  
+  return buffer;
+}
+
+function generateBellSound(sampleRate: number, volume: number): Float32Array {
+  // Bell-like sound with harmonics
+  const duration = 1.0;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const fundamental = 880; // A5
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const envelope = Math.exp(-t * 2) * Math.sin(Math.PI * t / duration);
+    
+    // Add harmonics for bell-like timbre
+    let sample = 0;
+    sample += Math.sin(2 * Math.PI * fundamental * t) * 1.0;
+    sample += Math.sin(2 * Math.PI * fundamental * 2 * t) * 0.6;
+    sample += Math.sin(2 * Math.PI * fundamental * 3 * t) * 0.4;
+    sample += Math.sin(2 * Math.PI * fundamental * 4.2 * t) * 0.25;
+    sample += Math.sin(2 * Math.PI * fundamental * 5.4 * t) * 0.2;
+    
+    buffer[i] = sample * envelope * volume * 0.3;
+  }
+  
+  return buffer;
+}
+
+function generateChimeSound(sampleRate: number, volume: number): Float32Array {
+  // Wind chime-like sound with multiple tones
+  const duration = 1.5;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const frequencies = [1046.50, 1174.66, 1318.51, 1396.91, 1567.98]; // C6, D6, E6, F6, G6
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    let sample = 0;
+    
+    frequencies.forEach((freq, index) => {
+      const delay = index * 0.1;
+      if (t > delay) {
+        const localT = t - delay;
+        const envelope = Math.exp(-localT * 1.5) * Math.sin(Math.PI * localT / 0.5);
+        sample += Math.sin(2 * Math.PI * freq * t) * envelope;
+      }
+    });
+    
+    buffer[i] = sample * volume * 0.3;
+  }
+  
+  return buffer;
+}
+
+function generatePingSound(sampleRate: number, volume: number): Float32Array {
+  // Short, high-pitched ping
+  const duration = 0.15;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new Float32Array(numSamples);
+  const frequency = 2093; // C7
+  
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const envelope = Math.exp(-t * 20) * Math.sin(Math.PI * t / duration);
+    buffer[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * volume;
   }
   
   return buffer;
