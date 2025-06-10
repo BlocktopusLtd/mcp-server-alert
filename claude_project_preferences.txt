@@ -81,6 +81,12 @@ Types: feat, fix, docs, style, refactor, test, chore
 - Always include clickable PR URL when PR is created
 - Summarize completed workflow steps at the end
 
+## Sound Notifications
+- Play a "questioning" sound when answering a prompt (e.g., "morse" or "tink")
+- Play a "success" or "tada" sound when merging a PR
+- Use volume 0.5 for prompt sounds, 0.7 for PR merge sounds
+- If sounds fail to play, continue without interrupting workflow
+
 ## Workflow Optimizations
 - If making multiple related changes in one session, group them logically in commits
 - Use git stash if switching contexts mid-work
