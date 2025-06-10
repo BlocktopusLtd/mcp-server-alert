@@ -228,9 +228,11 @@ You can play them with:
 ## 💻 Platform Support
 
 The server supports audio playback on:
-- **Windows**: Uses PowerShell's Media.SoundPlayer
-- **macOS**: Uses afplay
-- **Linux**: Uses aplay (requires ALSA)
+- **Windows**: Uses PowerShell's Media.SoundPlayer with WAV volume adjustment
+- **macOS**: Uses afplay with native volume support
+- **Linux**: Uses aplay with WAV volume adjustment
+
+Volume control works on all platforms! On Windows and Linux, the WAV data is modified to adjust volume. On macOS, the native -v flag is used.
 
 ## 🚀 Development
 

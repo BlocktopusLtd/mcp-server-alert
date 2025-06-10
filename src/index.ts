@@ -61,6 +61,74 @@ const server = new Server({
   }
 });
 
+// Helper function to adjust WAV volume
+function adjustWavVolume(wavBuffer: Buffer, volume: number): Buffer {
+  if (volume === 1.0) return wavBuffer; // No adjustment needed
+  
+  try {
+    // WAV files typically have a 44-byte header
+    const headerSize = 44;
+    
+    // Check if it's a valid WAV file
+    if (wavBuffer.length < headerSize || 
+        wavBuffer.toString('ascii', 0, 4) !== 'RIFF' ||
+        wavBuffer.toString('ascii', 8, 12) !== 'WAVE') {
+      console.error('Invalid WAV file format, returning original');
+      return wavBuffer;
+    }
+    
+    // Get audio format info from header
+    const audioFormat = wavBuffer.readUInt16LE(20); // 1 = PCM
+    const bitsPerSample = wavBuffer.readUInt16LE(34);
+    
+    // Only process PCM format
+    if (audioFormat !== 1) {
+      console.error('Non-PCM WAV format, returning original');
+      return wavBuffer;
+    }
+    
+    const newBuffer = Buffer.from(wavBuffer);
+    
+    // Find the data chunk
+    let dataStart = 12; // Start after 'WAVE'
+    while (dataStart < wavBuffer.length - 8) {
+      const chunkId = wavBuffer.toString('ascii', dataStart, dataStart + 4);
+      const chunkSize = wavBuffer.readUInt32LE(dataStart + 4);
+      
+      if (chunkId === 'data') {
+        dataStart += 8; // Skip chunk header
+        break;
+      }
+      dataStart += 8 + chunkSize;
+    }
+    
+    // Process audio data based on bit depth
+    if (bitsPerSample === 16) {
+      for (let i = dataStart; i < newBuffer.length - 1; i += 2) {
+        let sample = newBuffer.readInt16LE(i);
+        sample = Math.round(sample * volume);
+        sample = Math.max(-32768, Math.min(32767, sample));
+        newBuffer.writeInt16LE(sample, i);
+      }
+    } else if (bitsPerSample === 8) {
+      for (let i = dataStart; i < newBuffer.length; i++) {
+        let sample = newBuffer.readUInt8(i) - 128; // Convert to signed
+        sample = Math.round(sample * volume);
+        sample = Math.max(-128, Math.min(127, sample));
+        newBuffer.writeUInt8(sample + 128, i); // Convert back to unsigned
+      }
+    } else {
+      console.error(`Unsupported bit depth: ${bitsPerSample}, returning original`);
+      return wavBuffer;
+    }
+    
+    return newBuffer;
+  } catch (error) {
+    console.error('Error adjusting WAV volume:', error);
+    return wavBuffer; // Return original on any error
+  }
+}
+
 // Helper function to play audio file
 async function playAudioFile(filePath: string, volume: number = 1.0): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -69,17 +137,33 @@ async function playAudioFile(filePath: string, volume: number = 1.0): Promise<vo
     
     switch (process.platform) {
       case 'win32':
-        // Try multiple methods on Windows
+        // Windows: Apply volume by modifying WAV data if needed
+        if (volume !== 1.0) {
+          const fs = require('fs');
+          const wavData = fs.readFileSync(filePath);
+          const adjustedWav = adjustWavVolume(wavData, volume);
+          const tempFile = join(tmpdir(), `vol_adjusted_${Date.now()}.wav`);
+          fs.writeFileSync(tempFile, adjustedWav);
+          filePath = tempFile; // Use the volume-adjusted file
+        }
         command = 'powershell';
-        // Note: Windows SoundPlayer doesn't support volume directly
         args = ['-c', `(New-Object Media.SoundPlayer "${filePath}").PlaySync()`];
         break;
       case 'darwin':
         command = 'afplay';
-        args = [filePath];
+        args = ['-v', String(volume), filePath];
         break;
       case 'linux':
         command = 'aplay';
+        // aplay doesn't have a simple volume flag, so we adjust the WAV data
+        if (volume !== 1.0) {
+          const fs = require('fs');
+          const wavData = fs.readFileSync(filePath);
+          const adjustedWav = adjustWavVolume(wavData, volume);
+          const tempFile = join(tmpdir(), `vol_adjusted_${Date.now()}.wav`);
+          fs.writeFileSync(tempFile, adjustedWav);
+          filePath = tempFile;
+        }
         args = [filePath];
         break;
       default:
