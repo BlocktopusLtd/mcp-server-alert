@@ -3,6 +3,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import * as Tone from "tone";
 import { spawn } from "child_process";
 import { writeFileSync } from "fs";
@@ -86,7 +87,7 @@ server.tool(
   "play_tone",
   {
     description: "Play a simple tone with specified parameters",
-    inputSchema: playToneSchema
+    inputSchema: zodToJsonSchema(playToneSchema) as any
   },
   async (args) => {
     const { frequency, duration, waveform } = args as z.infer<typeof playToneSchema>;
@@ -152,7 +153,7 @@ server.tool(
   "play_melody",
   {
     description: "Play a sequence of musical notes",
-    inputSchema: playMelodySchema
+    inputSchema: zodToJsonSchema(playMelodySchema) as any
   },
   async (args) => {
     const { notes, tempo } = args as z.infer<typeof playMelodySchema>;
@@ -215,7 +216,7 @@ server.tool(
   "play_chord",
   {
     description: "Play multiple notes simultaneously",
-    inputSchema: playChordSchema
+    inputSchema: zodToJsonSchema(playChordSchema) as any
   },
   async (args) => {
     const { notes, duration } = args as z.infer<typeof playChordSchema>;
@@ -266,7 +267,7 @@ server.tool(
   "generate_sound_effect",
   {
     description: "Generate common sound effects",
-    inputSchema: generateSoundEffectSchema
+    inputSchema: zodToJsonSchema(generateSoundEffectSchema) as any
   },
   async (args) => {
     const { type, variant } = args as z.infer<typeof generateSoundEffectSchema>;
