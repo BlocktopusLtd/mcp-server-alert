@@ -37,6 +37,31 @@ Add the following to your Claude Desktop configuration file:
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
+#### Windows Configuration (using full path to npx.cmd):
+```json
+{
+  "mcpServers": {
+    "sound": {
+      "command": "C:\\Program Files\\nodejs\\npx.cmd",
+      "args": ["-y", "@blocktopus/mcp-server-alert"]
+    }
+  }
+}
+```
+
+#### Windows Configuration (using npx in PATH):
+```json
+{
+  "mcpServers": {
+    "sound": {
+      "command": "npx",
+      "args": ["-y", "@blocktopus/mcp-server-alert"]
+    }
+  }
+}
+```
+
+#### macOS/Linux Configuration:
 ```json
 {
   "mcpServers": {
@@ -170,9 +195,11 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - [ ] WebSocket support for remote control
 - [ ] Volume control
 
-## 🐛 Issues
+## 🐛 Issues & Troubleshooting
 
-If you encounter any problems, please [file an issue](https://github.com/blocktopus/mcp-server-alert/issues) along with a detailed description.
+If you encounter any problems, please check our [Troubleshooting Guide](TROUBLESHOOTING.md) first.
+
+For unresolved issues, please [file an issue](https://github.com/blocktopus/mcp-server-alert/issues) along with a detailed description.
 
 ## 🌟 Support
 
