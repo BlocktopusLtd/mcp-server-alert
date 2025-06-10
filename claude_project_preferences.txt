@@ -41,6 +41,7 @@ Types: feat, fix, docs, style, refactor, test, chore
 - Add testing instructions
 - Update PR description before merging if changes were made
 - PR title should be concise but descriptive
+- Always provide the PR URL after creation (e.g., https://github.com/org/repo/pull/123)
 
 ## Safety Practices
 - Show diff preview before making changes
@@ -77,6 +78,7 @@ Types: feat, fix, docs, style, refactor, test, chore
 - Explain what changed and why
 - Always mention which files are affected
 - Provide status updates during workflow (e.g., "Branch created", "PR #X opened")
+- Always include clickable PR URL when PR is created
 - Summarize completed workflow steps at the end
 
 ## Workflow Optimizations
