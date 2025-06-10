@@ -13,6 +13,7 @@ An MCP (Model Context Protocol) server that enables AI assistants to generate al
 - **Sound Effects**: Generate common sound effects (beep, alert, notification, error, success) with volume control
 - **External WAV Files**: Play external WAV files with volume control
 - **Bundled Sounds**: Built-in notification sounds (notification, success, error, bell, chime, ping)
+- **Sound Discovery**: Automatically discover WAV files from a specified directory
 - **Volume Control**: All sounds support volume adjustment (0-1)
 - **Cross-Platform**: Works on Windows, macOS, and Linux
 - **Easy Integration**: Simple MCP server that works with Claude Desktop and other MCP clients
@@ -40,19 +41,7 @@ Add the following to your Claude Desktop configuration file:
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
-#### Windows Configuration (using full path to npx.cmd):
-```json
-{
-  "mcpServers": {
-    "sound": {
-      "command": "C:\\Program Files\\nodejs\\npx.cmd",
-      "args": ["-y", "@blocktopus/mcp-server-alert"]
-    }
-  }
-}
-```
-
-#### Windows Configuration (using npx in PATH):
+#### Basic Configuration:
 ```json
 {
   "mcpServers": {
@@ -64,17 +53,19 @@ Add the following to your Claude Desktop configuration file:
 }
 ```
 
-#### macOS/Linux Configuration:
+#### With Sound Discovery (specify your sounds directory):
 ```json
 {
   "mcpServers": {
     "sound": {
       "command": "npx",
-      "args": ["-y", "@blocktopus/mcp-server-alert"]
+      "args": ["-y", "@blocktopus/mcp-server-alert", "C:/MyMedia/Sounds"]
     }
   }
 }
 ```
+
+Replace `C:/MyMedia/Sounds` with the path to your directory containing WAV files. The server will automatically discover all WAV files in that directory and make them available by their filename (without extension).
 
 ### Cursor
 
@@ -200,6 +191,38 @@ You can also pass any custom sound name, and the system will generate a unique s
 **Example:**
 ```
 "Play the bell notification sound"
+```
+
+### 7. `list_sounds`
+List all available sounds (bundled and discovered).
+
+**Parameters:** None
+
+**Example:**
+```
+"List all available sounds"
+```
+
+This will show:
+- Any WAV files discovered from your specified directory
+- All bundled sounds available
+- A note that custom names can be used to generate unique sounds
+
+## 🔊 Sound Discovery
+
+When you specify a sounds directory in the MCP server configuration, the server will:
+1. Scan the directory for all `.wav` files at startup
+2. Make them available by their filename (without extension)
+3. Prioritize discovered sounds over bundled sounds with the same name
+
+For example, if you have:
+- `C:/MyMedia/Sounds/homer-doh.wav`
+- `C:/MyMedia/Sounds/notification.wav`
+
+You can play them with:
+```
+"Play the homer-doh sound"
+"Play the notification sound" (will use your file, not the bundled one)
 ```
 
 ## 💻 Platform Support

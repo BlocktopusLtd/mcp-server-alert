@@ -5,9 +5,12 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { spawn } from "child_process";
-import { writeFileSync, readFileSync } from "fs";
-import { join } from "path";
+import { writeFileSync, readFileSync, readdirSync, statSync } from "fs";
+import { join, basename, extname } from "path";
 import { tmpdir } from "os";
+
+// Store discovered sounds from user's directory
+let discoveredSounds: Record<string, string> = {};
 
 // Bundled notification sounds as base64 encoded WAV files
 // These are common notification sounds that can be used without external files
@@ -20,6 +23,33 @@ const BUNDLED_SOUNDS: Record<string, string> = {
   error: "data:audio/wav;base64,UklGRjwCAABXQVZFZm10IBAAAAABAAEARA...",
   // Add more sounds here
 };
+
+// Function to discover WAV files in a directory
+function discoverSounds(directory: string): void {
+  try {
+    const files = readdirSync(directory);
+    let count = 0;
+    
+    for (const file of files) {
+      const fullPath = join(directory, file);
+      const stats = statSync(fullPath);
+      
+      if (stats.isFile() && extname(file).toLowerCase() === '.wav') {
+        // Use filename without extension as the sound name
+        const soundName = basename(file, '.wav').toLowerCase();
+        discoveredSounds[soundName] = fullPath;
+        count++;
+      }
+    }
+    
+    console.error(`Discovered ${count} WAV files in ${directory}`);
+    if (count > 0) {
+      console.error(`Available sounds: ${Object.keys(discoveredSounds).join(', ')}`);
+    }
+  } catch (error) {
+    console.error(`Error discovering sounds in ${directory}:`, error);
+  }
+}
 
 // Initialize the MCP server
 const server = new Server({
@@ -252,6 +282,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             }
           },
           required: ["sound"]
+        }
+      },
+      {
+        name: "list_sounds",
+        description: "List all available sounds (bundled and discovered)",
+        inputSchema: {
+          type: "object",
+          properties: {}
         }
       }
     ]
@@ -505,9 +543,28 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case "play_bundled_sound": {
       const { sound, volume = 0.7 } = args as any;
       try {
-        let buffer: Float32Array;
+        // First check if it's a discovered sound from the user's directory
+        if (discoveredSounds[sound.toLowerCase()]) {
+          const wavPath = discoveredSounds[sound.toLowerCase()];
+          
+          // Read and play the discovered WAV file
+          const fs = await import('fs/promises');
+          const wavData = await fs.readFile(wavPath);
+          const tempFile = join(tmpdir(), `discovered_${Date.now()}.wav`);
+          await fs.writeFile(tempFile, wavData);
+          await playAudioFile(tempFile, volume);
+          await fs.unlink(tempFile).catch(() => {}); // Clean up
+          
+          return {
+            content: [{
+              type: "text",
+              text: `✅ Played discovered sound: ${sound} from ${wavPath} at volume ${volume}`
+            }]
+          };
+        }
         
-        // Generate the appropriate sound based on selection
+        // Otherwise, generate the sound as before
+        let buffer: Float32Array;
         const sampleRate = 44100;
         
         // Check if we have a specific generator for this sound
@@ -560,6 +617,49 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           content: [{
             type: "text",
             text: `❌ Error playing bundled sound: ${error instanceof Error ? error.message : 'Unknown error'}`
+          }]
+        };
+      }
+    }
+
+    case "list_sounds": {
+      try {
+        const bundledSounds = [
+          "notification", "success", "error", "bell", "chime", "ping", "submarine",
+          "bottle", "glass", "funk", "morse", "purr", "tink",
+          "basso", "blow", "frog", "hero", "pop", "sosumi"
+        ];
+        
+        const discoveredSoundsList = Object.keys(discoveredSounds);
+        
+        let response = "📢 Available Sounds:\n\n";
+        
+        if (discoveredSoundsList.length > 0) {
+          response += "🎵 Discovered Sounds (from your directory):\n";
+          discoveredSoundsList.forEach(sound => {
+            response += `  - ${sound} (${discoveredSounds[sound]})\n`;
+          });
+          response += "\n";
+        }
+        
+        response += "🎶 Bundled Sounds:\n";
+        bundledSounds.forEach(sound => {
+          response += `  - ${sound}\n`;
+        });
+        
+        response += "\n💡 You can also use any custom name to generate a unique sound!";
+        
+        return {
+          content: [{
+            type: "text",
+            text: response
+          }]
+        };
+      } catch (error) {
+        return {
+          content: [{
+            type: "text",
+            text: `❌ Error listing sounds: ${error instanceof Error ? error.message : 'Unknown error'}`
           }]
         };
       }
@@ -1159,6 +1259,16 @@ function createWavBuffer(audioData: Float32Array, sampleRate: number): Buffer {
 
 // Start the server
 async function main() {
+  // Check for sounds directory argument
+  const soundsDir = process.argv[2];
+  if (soundsDir) {
+    console.error(`Looking for sounds in: ${soundsDir}`);
+    discoverSounds(soundsDir);
+  } else {
+    console.error("Tip: Pass a directory path as an argument to discover WAV files");
+    console.error("Example: mcp-server-alert /path/to/sounds");
+  }
+  
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("MCP Alert Server running on stdio");
