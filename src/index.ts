@@ -150,10 +150,15 @@ async function playAudioFile(filePath: string, volume: number = 1.0): Promise<vo
             // Continue with original file if volume adjustment fails
           }
         }
-        // Escape the file path for PowerShell
-        const escapedPath = filePath.replace(/'/g, "''");
+        // Try multiple methods for Windows
+        // First try with Windows Media Player COM object (more compatible)
+        const escapedPathWMP = filePath.replace(/\\/g, '\\\\').replace(/'/g, "''");
         command = 'powershell';
-        args = ['-NoProfile', '-Command', `(New-Object System.Media.SoundPlayer '${escapedPath}').PlaySync()`];
+        args = [
+          '-NoProfile', 
+          '-Command',
+          `try { $player = New-Object -ComObject WMPlayer.OCX; $player.URL = '${escapedPathWMP}'; $player.controls.play(); while($player.playState -ne 1) { Start-Sleep -Milliseconds 100 }; $player.close() } catch { (New-Object System.Media.SoundPlayer '${filePath.replace(/'/g, "''").replace(/\\/g, '\\\\')}').PlaySync() }`
+        ];
         break;
       case 'darwin':
         command = 'afplay';
