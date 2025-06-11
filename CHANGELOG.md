@@ -15,7 +15,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - External WAV playback now uses `start` command on Windows for better reliability
 
-## [1.0.0] - 2025-01-XX
+## [1.1.0] - 2025-02-06
+
+### Added
+- Proper volume control for all platforms
+  - Windows: WAV data modification for volume adjustment
+  - macOS: Native afplay -v flag support
+  - Linux: WAV data modification for volume adjustment
+
+### Fixed
+- Volume control now works correctly on Windows and Linux by modifying WAV audio data
+- Support for both 8-bit and 16-bit PCM WAV files
+
+## [1.0.0] - 2025-02-06
 
 ### Added
 - Support for playing external WAV files
