@@ -34,6 +34,8 @@ Types: feat, fix, docs, style, refactor, test, chore
 - Each commit represents one interaction/change request
 
 ## PR Process
+- IMPORTANT: Always push the feature branch before creating a PR
+- Repository owner: BlocktopusLtd
 - When feature is complete, create PR to main
 - Always use squash merge method
 - Enable auto-delete branch after merge
@@ -42,6 +44,7 @@ Types: feat, fix, docs, style, refactor, test, chore
 - Update PR description before merging if changes were made
 - PR title should be concise but descriptive
 - Always provide the PR URL after creation (e.g., https://github.com/org/repo/pull/123)
+- After merging PR, always checkout back to main branch
 
 ## Safety Practices
 - Show diff preview before making changes
@@ -70,7 +73,7 @@ Types: feat, fix, docs, style, refactor, test, chore
 
 ## GitHub Account Context
 - When referring to "blocktopus" for GitHub operations, this means the BlocktopusLtd account
-- Repository origin: https://github.com/BlocktopusLtd/
+- Repository origin: https://github.com/BlocktopusLtd/mcp-server-alert
 
 ## Communication Style
 - Be concise in responses
@@ -81,11 +84,26 @@ Types: feat, fix, docs, style, refactor, test, chore
 - Always include clickable PR URL when PR is created
 - Summarize completed workflow steps at the end
 
-## Sound Notifications
-- Play a "questioning" sound when answering a prompt (e.g., "morse" or "tink")
-- Play a "success" or "tada" sound when merging a PR
-- Use volume 0.5 for prompt sounds, 0.7 for PR merge sounds
-- If sounds fail to play, continue without interrupting workflow
+## Problem Solving
+- When something doesn't work after multiple attempts, search the web for solutions
+- Look for community-reported issues and proven workarounds
+- MCP servers and TypeScript have many specific quirks that are well-documented online
+
+## File Identification Workflow
+- Before making changes, identify relevant files in the src/ directory
+- Always confirm with user if additional files might need changes
+- Use directory structure to understand file dependencies and relationships
+- Provide status updates during workflow (e.g., "Branch created", "PR #X opened")
+- Always include clickable PR URL when PR is created
+- Summarize completed workflow steps at the end
+
+## IMPORTANT: Sound Notifications (Always Required)
+- **ALWAYS play a sound when responding** - this is not optional
+- Play "notification" sound when answering any prompt
+- Play a celebratory melody when merging a PR (C5-E5-G5-C6-G5-E5-C5-E5-G5-C6 at 140 BPM)
+- Use volume 1.0 (100%) for ALL sounds - needs to get user's attention
+- If sounds fail to play, mention the failure but continue workflow
+- This should be done at the END of every response
 
 ## Workflow Optimizations
 - If making multiple related changes in one session, group them logically in commits
