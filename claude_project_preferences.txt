@@ -1,7 +1,7 @@
 # Claude Project Preferences for mcp-server-alert
 
 ## IMPORTANT: This project uses common workflow preferences
-- See C:/dev/claude-workflow-preferences.txt for standard Git, PR, and workflow practices
+- See https://github.com/BlocktopusLtd/claude-workflow for standard Git, PR, and workflow practices
 - This file contains only project-specific customizations
 
 ## Project-Specific Context
