@@ -37,12 +37,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/blocktopus/mcp-server-alert.git"
+    "url": "https://github.com/BlocktopusLtd/mcp-server-alert.git"
   },
   "bugs": {
-    "url": "https://github.com/blocktopus/mcp-server-alert/issues"
+    "url": "https://github.com/BlocktopusLtd/mcp-server-alert/issues"
   },
-  "homepage": "https://github.com/blocktopus/mcp-server-alert#readme",
+  "homepage": "https://github.com/BlocktopusLtd/mcp-server-alert#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
     "tone": "^15.1.3",

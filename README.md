@@ -239,7 +239,7 @@ Volume control works on all platforms! On Windows and Linux, the WAV data is mod
 ### Setup
 ```bash
 # Clone the repository
-git clone https://github.com/blocktopus/mcp-server-alert.git
+git clone https://github.com/BlocktopusLtd/mcp-server-alert.git
 cd mcp-server-alert
 
 # Install dependencies
@@ -287,7 +287,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 If you encounter any problems, please check our [Troubleshooting Guide](TROUBLESHOOTING.md) first.
 
-For unresolved issues, please [file an issue](https://github.com/blocktopus/mcp-server-alert/issues) along with a detailed description.
+For unresolved issues, please [file an issue](https://github.com/BlocktopusLtd/mcp-server-alert/issues) along with a detailed description.
 
 ## 🌟 Support
 
