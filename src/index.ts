@@ -139,14 +139,21 @@ async function playAudioFile(filePath: string, volume: number = 1.0): Promise<vo
       case 'win32':
         // Windows: Apply volume by modifying WAV data if needed
         if (volume !== 1.0) {
-          const wavData = readFileSync(filePath);
-          const adjustedWav = adjustWavVolume(wavData, volume);
-          const tempFile = join(tmpdir(), `vol_adjusted_${Date.now()}.wav`);
-          writeFileSync(tempFile, adjustedWav);
-          filePath = tempFile; // Use the volume-adjusted file
+          try {
+            const wavData = readFileSync(filePath);
+            const adjustedWav = adjustWavVolume(wavData, volume);
+            const tempFile = join(tmpdir(), `vol_adjusted_${Date.now()}.wav`);
+            writeFileSync(tempFile, adjustedWav);
+            filePath = tempFile; // Use the volume-adjusted file
+          } catch (err) {
+            console.error('Error adjusting volume:', err);
+            // Continue with original file if volume adjustment fails
+          }
         }
+        // Escape the file path for PowerShell
+        const escapedPath = filePath.replace(/'/g, "''");
         command = 'powershell';
-        args = ['-c', `(New-Object Media.SoundPlayer "${filePath}").PlaySync()`];
+        args = ['-NoProfile', '-Command', `(New-Object System.Media.SoundPlayer '${escapedPath}').PlaySync()`];
         break;
       case 'darwin':
         command = 'afplay';
@@ -171,11 +178,17 @@ async function playAudioFile(filePath: string, volume: number = 1.0): Promise<vo
     
     const player = spawn(command, args);
     
+    let stderr = '';
+    player.stderr?.on('data', (data) => {
+      stderr += data.toString();
+    });
+    
     player.on('close', (code) => {
       if (code === 0) {
         resolve();
       } else {
-        reject(new Error(`Player exited with code ${code}`));
+        const errorMsg = stderr ? `Player exited with code ${code}: ${stderr}` : `Player exited with code ${code}`;
+        reject(new Error(errorMsg));
       }
     });
     
@@ -590,21 +603,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case "play_wav": {
       const { filepath, volume = 1.0 } = args as any;
       try {
-        // Read the WAV file
+        // Check if file exists
         const fs = await import('fs/promises');
-        const wavData = await fs.readFile(filepath);
+        await fs.access(filepath);
         
-        // For volume adjustment, we'd need to parse and modify the WAV data
-        // For now, we'll save it to a temp file and play it
-        // In a production version, you'd want to actually parse and modify the audio data
-        const tempFile = join(tmpdir(), `wav_${Date.now()}.wav`);
-        await fs.writeFile(tempFile, wavData);
-        
-        // Play the file
-        await playAudioFile(tempFile, volume);
-        
-        // Clean up temp file
-        await fs.unlink(tempFile).catch(() => {}); // Ignore errors
+        // Play the file directly using its original path
+        await playAudioFile(filepath, volume);
         
         return {
           content: [{
