@@ -54,7 +54,7 @@ function discoverSounds(directory: string): void {
 // Initialize the MCP server
 const server = new Server({
   name: "mcp-server-alert",
-  version: "1.1.0"
+  version: "1.1.2"
 }, {
   capabilities: {
     tools: {}
