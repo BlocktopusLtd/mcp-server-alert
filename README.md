@@ -78,8 +78,7 @@ Then use this configuration:
 {
   "mcpServers": {
     "sound": {
-      "command": "node",
-      "args": ["/usr/local/lib/node_modules/@blocktopus/mcp-server-alert/dist/index.js"]
+      "command": "mcp-server-alert"
     }
   }
 }
@@ -90,17 +89,16 @@ Then use this configuration:
 {
   "mcpServers": {
     "sound": {
-      "command": "node",
-      "args": ["/usr/local/lib/node_modules/@blocktopus/mcp-server-alert/dist/index.js", "C:/MyMedia/Sounds"]
+      "command": "mcp-server-alert",
+      "args": ["C:/MyMedia/Sounds"]
     }
   }
 }
 ```
 
-**Note:** The path to the globally installed module may vary depending on your system:
-- **macOS/Linux**: `/usr/local/lib/node_modules/@blocktopus/mcp-server-alert/dist/index.js`
-- **Windows**: `%APPDATA%\npm\node_modules\@blocktopus\mcp-server-alert\dist\index.js`
-- You can find your global node_modules path by running: `npm root -g`
+**Note:** When installed globally, the `mcp-server-alert` command is available in your PATH. If you encounter issues, you can use the full path to the executable:
+- **macOS/Linux**: `/usr/local/bin/mcp-server-alert`
+- **Windows**: `%APPDATA%\npm\mcp-server-alert.cmd`
 
 Replace `C:/MyMedia/Sounds` with the path to your directory containing WAV files. The server will automatically discover all WAV files in that directory and make them available by their filename (without extension).
 
