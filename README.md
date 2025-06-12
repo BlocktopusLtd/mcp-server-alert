@@ -41,7 +41,8 @@ Add the following to your Claude Desktop configuration file:
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
-#### Basic Configuration:
+#### Option 1: Using npx (Downloads latest version on each Claude startup)
+
 ```json
 {
   "mcpServers": {
@@ -53,7 +54,7 @@ Add the following to your Claude Desktop configuration file:
 }
 ```
 
-#### With Sound Discovery (specify your sounds directory):
+**With Sound Discovery:**
 ```json
 {
   "mcpServers": {
@@ -64,6 +65,42 @@ Add the following to your Claude Desktop configuration file:
   }
 }
 ```
+
+#### Option 2: Using global install (Faster startup, uses locally installed version)
+
+First install globally:
+```bash
+npm install -g @blocktopus/mcp-server-alert
+```
+
+Then use this configuration:
+```json
+{
+  "mcpServers": {
+    "sound": {
+      "command": "node",
+      "args": ["/usr/local/lib/node_modules/@blocktopus/mcp-server-alert/dist/index.js"]
+    }
+  }
+}
+```
+
+**With Sound Discovery:**
+```json
+{
+  "mcpServers": {
+    "sound": {
+      "command": "node",
+      "args": ["/usr/local/lib/node_modules/@blocktopus/mcp-server-alert/dist/index.js", "C:/MyMedia/Sounds"]
+    }
+  }
+}
+```
+
+**Note:** The path to the globally installed module may vary depending on your system:
+- **macOS/Linux**: `/usr/local/lib/node_modules/@blocktopus/mcp-server-alert/dist/index.js`
+- **Windows**: `%APPDATA%\npm\node_modules\@blocktopus\mcp-server-alert\dist\index.js`
+- You can find your global node_modules path by running: `npm root -g`
 
 Replace `C:/MyMedia/Sounds` with the path to your directory containing WAV files. The server will automatically discover all WAV files in that directory and make them available by their filename (without extension).
 
