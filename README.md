@@ -46,8 +46,8 @@ Add the following to your Claude Desktop configuration file:
 {
   "mcpServers": {
     "sound": {
-      "command": "npx",
-      "args": ["-y", "@blocktopus/mcp-server-alert"]
+      "command": "node",
+      "args": ["/usr/local/lib/node_modules/@blocktopus/mcp-server-alert/dist/index.js"]
     }
   }
 }
@@ -58,12 +58,17 @@ Add the following to your Claude Desktop configuration file:
 {
   "mcpServers": {
     "sound": {
-      "command": "npx",
-      "args": ["-y", "@blocktopus/mcp-server-alert", "C:/MyMedia/Sounds"]
+      "command": "node",
+      "args": ["/usr/local/lib/node_modules/@blocktopus/mcp-server-alert/dist/index.js", "C:/MyMedia/Sounds"]
     }
   }
 }
 ```
+
+**Note:** The path to the globally installed module may vary depending on your system:
+- **macOS/Linux**: `/usr/local/lib/node_modules/@blocktopus/mcp-server-alert/dist/index.js`
+- **Windows**: `%APPDATA%\npm\node_modules\@blocktopus\mcp-server-alert\dist\index.js`
+- You can find your global node_modules path by running: `npm root -g`
 
 Replace `C:/MyMedia/Sounds` with the path to your directory containing WAV files. The server will automatically discover all WAV files in that directory and make them available by their filename (without extension).
 
