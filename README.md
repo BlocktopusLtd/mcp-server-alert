@@ -41,7 +41,39 @@ Add the following to your Claude Desktop configuration file:
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 
-#### Basic Configuration:
+#### Option 1: Using npx (Downloads latest version on each Claude startup)
+
+```json
+{
+  "mcpServers": {
+    "sound": {
+      "command": "npx",
+      "args": ["-y", "@blocktopus/mcp-server-alert"]
+    }
+  }
+}
+```
+
+**With Sound Discovery:**
+```json
+{
+  "mcpServers": {
+    "sound": {
+      "command": "npx",
+      "args": ["-y", "@blocktopus/mcp-server-alert", "C:/MyMedia/Sounds"]
+    }
+  }
+}
+```
+
+#### Option 2: Using global install (Faster startup, uses locally installed version)
+
+First install globally:
+```bash
+npm install -g @blocktopus/mcp-server-alert
+```
+
+Then use this configuration:
 ```json
 {
   "mcpServers": {
@@ -53,7 +85,7 @@ Add the following to your Claude Desktop configuration file:
 }
 ```
 
-#### With Sound Discovery (specify your sounds directory):
+**With Sound Discovery:**
 ```json
 {
   "mcpServers": {
